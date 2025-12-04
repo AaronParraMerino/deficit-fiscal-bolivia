@@ -1,12 +1,12 @@
-# 🏛️ Modelación Estocástica del Déficit Fiscal y la Dinámica de la Deuda Pública en Bolivia
+# Modelación Estocástica del Déficit Fiscal y la Dinámica de la Deuda Pública en Bolivia
 
 Este proyecto implementa un modelo de simulación estocástica para analizar la dinámica del déficit fiscal y la deuda pública en Bolivia durante el período 2020–2025, bajo condiciones de incertidumbre económica.
 
-## 📌 Objetivo del Proyecto
+## Objetivo del Proyecto
 
 Desarrollar un modelo matemático estocástico y una interfaz web interactiva que permita simular y visualizar escenarios de sostenibilidad fiscal, considerando variables clave como ingresos públicos, gastos estatales, subsidios, precios internacionales de recursos naturales y acumulación de deuda.
 
-## 🧩 Componentes del Modelo
+## Componentes del Modelo
 
 El modelo incluye los siguientes agentes y variables económicas:
 
@@ -17,7 +17,7 @@ El modelo incluye los siguientes agentes y variables económicas:
 - **Sector externo**: precios internacionales, tipo de cambio, riesgo país.
 - **Variables estocásticas**: precios del gas/minerales, demanda energética, recaudación tributaria.
 
-## 🚀 Características del Proyecto
+## Características del Proyecto
 
 - **Modelo estocástico**: simulación de escenarios bajo incertidumbre.
 - **Interfaz web interactiva**: desarrollada con **Streamlit**.
@@ -25,7 +25,7 @@ El modelo incluye los siguientes agentes y variables económicas:
 - **Análisis de sensibilidad**: permite ajustar parámetros y observar impactos en tiempo real.
 - **Repositorio de datos**: fuentes verificables y documentadas.
 
-## 📦 Instalación y Ejecución
+## Instalación y Ejecución
 
 ### Requisitos previos
 
