@@ -37,15 +37,18 @@ El modelo incluye los siguientes agentes y variables económicas:
 1. Clonar el repositorio:
 ```bash
 git clone https://github.com/AaronParraMerino/deficit-fiscal-bolivia.git
+# or
 cd deficit-fiscal-bolivia
-
+```
 2. Instalar las dependencias:
 ```bash
 pip install -r requirements.txt
-
+```
 3. 
 
 ## Uso del proyecto
 ```bash
 cd web
+```
 streamlit run app.py
+```
