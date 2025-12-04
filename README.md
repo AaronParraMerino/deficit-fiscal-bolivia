@@ -49,6 +49,6 @@ pip install -r requirements.txt
 ## Uso del proyecto
 ```bash
 cd web
-```
+# or
 streamlit run app.py
 ```
