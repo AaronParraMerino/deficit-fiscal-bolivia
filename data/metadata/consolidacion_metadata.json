@@ -1,0 +1,21 @@
+{
+  "fecha_consolidacion": "2025-12-08T03:38:53.310654",
+  "datasets": [
+    "deuda_publica",
+    "ipc",
+    "pib",
+    "precios_commodities",
+    "spnf",
+    "tasas_interes",
+    "tipo_cambio"
+  ],
+  "conteo_datos": {
+    "deuda_publica": 74,
+    "ipc": 21,
+    "pib": 85,
+    "precios_commodities": 45,
+    "spnf": 88,
+    "tasas_interes": 25,
+    "tipo_cambio": 94
+  }
+}
