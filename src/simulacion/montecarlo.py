@@ -174,31 +174,26 @@ class SimuladorMonteCarlo:
         Calcula probabilidades de eventos críticos
         """
         n = len(df_metricas)
-        
-        resumen = (
-            todo
-            .groupby("anio")
-            .agg(
-                pib_medio=("pib", "mean"),
-                deuda_pib_media=("deuda_pib", "mean"),
-                deuda_pib_p5=("deuda_pib", lambda x: x.quantile(0.05)),
-                deuda_pib_p95=("deuda_pib", lambda x: x.quantile(0.95)),
-            )
-            .reset_index()
-        )
-
+        if n == 0:
+            return {}
 
         prob = {
-            'deuda_mayor_60_pib': (df_metricas['ratio_deuda_pib_final'] > 0.60).sum() / n,
-            'deuda_mayor_70_pib': (df_metricas['ratio_deuda_pib_final'] > 0.70).sum() / n,
-            'deuda_mayor_80_pib': (df_metricas['ratio_deuda_pib_final'] > 0.80).sum() / n,
-            'deficit_mayor_5_pib': (df_metricas['ratio_deficit_pib_promedio'] < -0.05).sum() / n,
-            'deficit_mayor_8_pib': (df_metricas['ratio_deficit_pib_promedio'] < -0.08).sum() / n,
-            'reservas_criticas': (df_metricas['reservas_finales'] < 3000).sum() / n,
-            'crecimiento_negativo': (df_metricas['tasa_crecimiento_promedio'] < 0).sum() / n,
-            'carga_intereses_alta': (df_metricas['carga_intereses'] > 0.15).sum() / n
+            "deuda_mayor_60_pib": (df_metricas["ratio_deuda_pib_final"] > 0.60).sum() / n,
+            "deuda_mayor_70_pib": (df_metricas["ratio_deuda_pib_final"] > 0.70).sum() / n,
+            "deuda_mayor_80_pib": (df_metricas["ratio_deuda_pib_final"] > 0.80).sum() / n,
+            "deficit_mayor_5_pib": (
+                df_metricas["ratio_deficit_pib_promedio"] < -0.05
+            ).sum() / n,
+            "deficit_mayor_8_pib": (
+                df_metricas["ratio_deficit_pib_promedio"] < -0.08
+            ).sum() / n,
+            "reservas_criticas": (df_metricas["reservas_finales"] < 3000).sum() / n,
+            "crecimiento_negativo": (
+                df_metricas["tasa_crecimiento_promedio"] < 0
+            ).sum() / n,
+            "carga_intereses_alta": (df_metricas["carga_intereses"] > 0.15).sum() / n,
         }
-        
+
         return prob
     
     def seleccionar_trayectorias_representativas(self) -> Dict:

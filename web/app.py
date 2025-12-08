@@ -18,6 +18,9 @@ from src.modelo.modelo_estocastico import ModeloEstocastico
 from src.agentes.gobierno import AgenteGobierno
 from src.agentes.empresas import AgenteEmpresas
 from src.utils.io import DataLoader, generar_reporte_datos
+from src.simulacion.montecarlo import SimuladorMonteCarlo
+from src.modelo.modelo_estocastico import ModeloEstocastico
+
 
 # Configuración de la página
 st.set_page_config(
@@ -362,21 +365,165 @@ def main():
     # TAB 3: Monte Carlo
     with tab3:
         st.header("Simulación Monte Carlo")
-        
+
         st.write("""
         Ejecuta múltiples simulaciones para analizar distribuciones de resultados 
         y probabilidades de eventos críticos.
         """)
-        
-        st.warning("⚠️ **Funcionalidad en desarrollo**: Requiere completar módulo de Monte Carlo")
-        
+
+        # Número de simulaciones
         num_sims = st.number_input(
             "Número de Simulaciones",
-            10, 500, 100, 10
+            min_value=10,
+            max_value=1000,
+            value=min(100, st.session_state.configuracion.simulacion.num_simulaciones),
+            step=10,
         )
-        
-        if st.button("▶️ Ejecutar Monte Carlo", type="primary", disabled=True):
-            st.info("Funcionalidad próximamente disponible")
+
+        # Por estabilidad, ejecución secuencial
+        st.info(
+            "Por estabilidad, la simulación Monte Carlo se ejecuta en modo "
+            "secuencial (sin procesamiento paralelo)."
+        )
+
+        if st.button("▶️ Ejecutar Monte Carlo", type="primary"):
+            with st.spinner(f"Ejecutando {int(num_sims)} simulaciones Monte Carlo..."):
+                try:
+                    config = st.session_state.configuracion
+
+                    simulador = SimuladorMonteCarlo(ModeloEstocastico, config)
+                    analisis = simulador.ejecutar_montecarlo(
+                        int(num_sims),
+                        crear_agentes,
+                        paralelo=False,   # 👈 importante: sin paralelo
+                    )
+
+                    # Verificación mínima: debe ser dict y traer df_metricas
+                    if (
+                        not analisis
+                        or not isinstance(analisis, dict)
+                        or "df_metricas" not in analisis
+                    ):
+                        st.error(
+                            "No se pudieron obtener resultados Monte Carlo "
+                            "(no se encontró 'df_metricas'). Revisa la consola "
+                            "donde ejecutas Streamlit para ver errores detallados."
+                        )
+                        st.write("Contenido devuelto por ejecutar_montecarlo():")
+                        st.write(analisis)
+                        st.session_state.resultados_montecarlo = None
+                    else:
+                        st.session_state.resultados_montecarlo = analisis
+                        st.success(f"✓ {int(num_sims)} simulaciones completadas")
+
+                except Exception as e:
+                    st.error(f"Error en la ejecución de Monte Carlo: {e}")
+                    import traceback
+                    st.code(traceback.format_exc())
+
+        # Mostrar resultados si ya existen
+        if st.session_state.resultados_montecarlo is not None:
+            analisis = st.session_state.resultados_montecarlo
+
+            # Asegurarnos de que tenga df_metricas
+            if "df_metricas" not in analisis:
+                st.error(
+                    "Los resultados Monte Carlo no contienen 'df_metricas'. "
+                    "Ejecuta otra vez la simulación."
+                )
+                st.write(analisis)
+            else:
+                df_metricas = analisis["df_metricas"]
+
+                st.subheader("Distribución de resultados Monte Carlo")
+
+                # Nombre de la columna con el ratio deuda/PIB final
+                # ⚠️ Si en tu df_metricas se llama distinto, cámbialo aquí.
+                col_ratio = "ratio_deuda_pib_final"
+
+                if col_ratio not in df_metricas.columns:
+                    st.error(f"No se encontró la columna '{col_ratio}' en df_metricas")
+                    st.write(df_metricas.head())
+                else:
+                    serie = df_metricas[col_ratio]
+
+                    media = float(serie.mean())
+                    mediana = float(serie.median())
+                    p95 = float(serie.quantile(0.95))
+                    desv = float(serie.std(ddof=1))
+
+                    c1, c2, c3, c4 = st.columns(4)
+                    with c1:
+                        st.metric("Media Deuda/PIB final", f"{media:.1%}")
+                    with c2:
+                        st.metric("Mediana Deuda/PIB final", f"{mediana:.1%}")
+                    with c3:
+                        st.metric("Percentil 95", f"{p95:.1%}")
+                    with c4:
+                        st.metric("Desv. estándar", f"{desv:.1%}")
+
+                    # ==== Histograma de barras (Plotly) ====
+                    import plotly.express as px
+
+                    fig_hist = px.histogram(
+                        df_metricas,
+                        x=col_ratio,
+                        nbins=30,
+                        title="Distribución de Ratio Deuda/PIB Final",
+                        labels={col_ratio: "Ratio Deuda/PIB final"},
+                    )
+                    fig_hist.update_layout(
+                        xaxis_title="Ratio Deuda/PIB final",
+                        yaxis_title="Frecuencia",
+                    )
+                    st.plotly_chart(fig_hist, use_container_width=True)
+
+                    # ==== Gráfico de barras de probabilidades de eventos críticos ====
+                    prob = analisis.get("probabilidades", {})
+
+                    if prob:
+                        st.subheader("Probabilidades de eventos críticos")
+
+                        eventos = [
+                            "deuda_mayor_60_pib",
+                            "deuda_mayor_70_pib",
+                            "deuda_mayor_80_pib",
+                            "reservas_criticas",
+                            "crecimiento_negativo",
+                        ]
+                        nombres_eventos = {
+                            "deuda_mayor_60_pib": "Deuda > 60% PIB",
+                            "deuda_mayor_70_pib": "Deuda > 70% PIB",
+                            "deuda_mayor_80_pib": "Deuda > 80% PIB",
+                            "reservas_criticas": "Reservas críticas",
+                            "crecimiento_negativo": "Crecimiento negativo",
+                        }
+
+                        datos_barra = {
+                            "Evento": [],
+                            "Probabilidad": [],
+                        }
+
+                        for ev in eventos:
+                            if ev in prob:
+                                datos_barra["Evento"].append(nombres_eventos.get(ev, ev))
+                                datos_barra["Probabilidad"].append(float(prob[ev]))
+
+                        if datos_barra["Evento"]:
+                            df_prob = pd.DataFrame(datos_barra)
+                            fig_prob = px.bar(
+                                df_prob,
+                                x="Evento",
+                                y="Probabilidad",
+                                title="Probabilidades estimadas de eventos críticos",
+                                labels={"Probabilidad": "Probabilidad"},
+                            )
+                            fig_prob.update_layout(yaxis_tickformat=".0%")
+                            st.plotly_chart(fig_prob, use_container_width=True)
+                    else:
+                        st.info(
+                            "No se encontraron probabilidades calculadas en los resultados Monte Carlo."
+                        )
     
     # TAB 4: Resultados
     with tab4:
